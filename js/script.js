@@ -1,292 +1,268 @@
 
-/* =========================================
-   TET3RHQ STUDIO
-   WEBSITE FUNCTIONALITY
-   CLOUDFLARE API INTEGRATION
-========================================= */
-
-
-/* ---------- 1. API CONFIGURATION ---------- */
+/* =====================================================
+   TET3RHQ STUDIO — FRONTEND INTERACTIONS
+   Public API / Navigation / Theme / Motion
+===================================================== */
 
 const API_BASE_URL = "";
 
-
-/* ---------- 2. SHARED HELPERS ---------- */
-
-// Escape database content before inserting it into HTML.
+/* 01. HELPERS */
 
 function escapeHTML(value) {
-
     return String(value ?? "").replace(/[&<>"']/g, character => {
-
         const entities = {
             "&": "&amp;",
             "<": "&lt;",
             ">": "&gt;",
             '"': "&quot;",
-            "'": "&#039;"
+            "'": "&#39;"
         };
 
         return entities[character];
-
     });
-
 }
 
-
-// Accept only HTTP and HTTPS links.
-
 function safeURL(value) {
-
     if (!value) return "";
 
     try {
+        const url = new URL(String(value), window.location.origin);
 
-        const url = new URL(value, window.location.href);
-
-        if (url.protocol !== "https:" && url.protocol !== "http:") {
-            return "";
+        if (url.protocol === "http:" || url.protocol === "https:") {
+            return url.href;
         }
-
-        return url.href;
-
-    } catch {
 
         return "";
-
+    } catch {
+        return "";
     }
-
 }
-
-
-// Support different collection response formats.
 
 function extractCollection(payload, collectionName) {
+    if (Array.isArray(payload)) return payload;
 
-    if (Array.isArray(payload)) {
-        return payload;
+    if (!payload || typeof payload !== "object") return [];
+
+    if (Array.isArray(payload[collectionName])) {
+        return payload[collectionName];
     }
 
-    if (!payload || typeof payload !== "object") {
-        throw new Error("Invalid API response.");
-    }
+    if (Array.isArray(payload.data)) return payload.data;
+    if (Array.isArray(payload.results)) return payload.results;
+    if (Array.isArray(payload.items)) return payload.items;
 
-    const possibleCollections = [
-        payload[collectionName],
-        payload.data,
-        payload.results,
-        payload.items
-    ];
-
-    for (const collection of possibleCollections) {
-
-        if (Array.isArray(collection)) {
-            return collection;
-        }
-
-    }
-
-    throw new Error("Could not find the requested collection.");
-
+    return [];
 }
 
-
-// Fetch public information from Cloudflare.
-
 async function fetchPublicData(endpoint, collectionName) {
-
-    const response = await fetch(
-        `${API_BASE_URL}${endpoint}`,
-        {
-            method: "GET",
-            credentials: "include",
-            cache: "no-store",
-            headers: {
-                "Accept": "application/json"
-            }
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+        method: "GET",
+        credentials: "include",
+        cache: "no-store",
+        headers: {
+            "Accept": "application/json"
         }
-    );
+    });
 
     if (!response.ok) {
-
-        throw new Error(
-            `API request failed with status ${response.status}.`
-        );
-
+        throw new Error(`Request failed: ${response.status}`);
     }
 
     const payload = await response.json();
 
-    return extractCollection(payload, collectionName);
+    if (payload && payload.success === false) {
+        throw new Error(payload.message || "Unable to load data.");
+    }
 
+    return extractCollection(payload, collectionName);
 }
 
 
-/* ---------- 3. MOBILE NAVIGATION ---------- */
+/* 02. MOBILE NAVIGATION */
 
-const menuToggle = document.querySelector(".menu-toggle");
-const mainNav = document.querySelector(".main-nav");
+function initialiseNavigation() {
+    const menuToggle = document.querySelector(".menu-toggle");
+    const mainNav = document.querySelector(".main-nav");
 
-if (menuToggle && mainNav) {
+    if (!menuToggle || !mainNav) return;
 
-    menuToggle.addEventListener("click", () => {
+    function closeMenu() {
+        mainNav.classList.remove("active");
+        menuToggle.setAttribute("aria-expanded", "false");
+        menuToggle.setAttribute("aria-label", "Open navigation");
+        menuToggle.textContent = "☰";
+    }
 
-        mainNav.classList.toggle("active");
+    function toggleMenu() {
+        const isOpen = mainNav.classList.toggle("active");
 
-        const isOpen = mainNav.classList.contains("active");
-
-        menuToggle.setAttribute("aria-expanded", isOpen);
+        menuToggle.setAttribute("aria-expanded", String(isOpen));
+        menuToggle.setAttribute(
+            "aria-label",
+            isOpen ? "Close navigation" : "Open navigation"
+        );
 
         menuToggle.textContent = isOpen ? "✕" : "☰";
+    }
 
-    });
-
-
-    // Close menu after clicking a navigation link.
+    menuToggle.addEventListener("click", toggleMenu);
 
     mainNav.querySelectorAll("a").forEach(link => {
-
-        link.addEventListener("click", () => {
-
-            mainNav.classList.remove("active");
-
-            menuToggle.setAttribute("aria-expanded", "false");
-
-            menuToggle.textContent = "☰";
-
-        });
-
+        link.addEventListener("click", closeMenu);
     });
 
+    document.addEventListener("keydown", event => {
+        if (event.key === "Escape") closeMenu();
+    });
+
+    window.addEventListener("resize", () => {
+        if (window.innerWidth > 850) closeMenu();
+    });
 }
 
 
-/* ---------- 4. DARK / LIGHT MODE ---------- */
+/* 03. THEME SYSTEM */
 
-const themeToggle = document.querySelector(".theme-toggle");
-
-const savedTheme = localStorage.getItem("tet3rhq-theme");
-
-if (savedTheme === "light") {
-
-    document.body.classList.add("light-mode");
-
-}
-
-function updateThemeButton() {
+function initialiseTheme() {
+    const themeToggle = document.querySelector(".theme-toggle");
 
     if (!themeToggle) return;
 
-    const isLight = document.body.classList.contains("light-mode");
+    const savedTheme = localStorage.getItem("tet3rhq-theme");
 
-    themeToggle.textContent = isLight ? "☾" : "☀";
-
-    themeToggle.setAttribute(
-        "aria-label",
-        isLight ? "Switch to dark mode" : "Switch to light mode"
-    );
-
-}
-
-updateThemeButton();
-
-if (themeToggle) {
-
-    themeToggle.addEventListener("click", () => {
-
-        document.body.classList.toggle("light-mode");
-
-        const currentTheme = document.body.classList.contains("light-mode")
-            ? "light"
-            : "dark";
-
-        localStorage.setItem("tet3rhq-theme", currentTheme);
-
-        updateThemeButton();
-
-    });
-
-}
-
-
-/* ---------- 5. HEADER SCROLL EFFECT ---------- */
-
-const siteHeader = document.querySelector(".site-header");
-
-function handleHeaderScroll() {
-
-    if (!siteHeader) return;
-
-    if (window.scrollY > 50) {
-
-        siteHeader.classList.add("scrolled");
-
-    } else {
-
-        siteHeader.classList.remove("scrolled");
-
+    if (savedTheme === "light") {
+        document.body.classList.add("light-mode");
     }
 
+    function updateThemeButton() {
+        const isLight = document.body.classList.contains("light-mode");
+
+        themeToggle.textContent = isLight ? "☀" : "◐";
+
+        themeToggle.setAttribute(
+            "aria-label",
+            isLight ? "Switch to dark theme" : "Switch to light theme"
+        );
+    }
+
+    updateThemeButton();
+
+    themeToggle.addEventListener("click", () => {
+        document.body.classList.toggle("light-mode");
+
+        const isLight = document.body.classList.contains("light-mode");
+
+        localStorage.setItem(
+            "tet3rhq-theme",
+            isLight ? "light" : "dark"
+        );
+
+        updateThemeButton();
+    });
 }
 
-window.addEventListener("scroll", handleHeaderScroll);
 
-handleHeaderScroll();
+/* 04. HEADER SCROLL EFFECT */
+
+function initialiseHeader() {
+    const header = document.querySelector(".site-header");
+
+    if (!header) return;
+
+    function updateHeader() {
+        header.classList.toggle("scrolled", window.scrollY > 40);
+    }
+
+    window.addEventListener("scroll", updateHeader, {
+        passive: true
+    });
+
+    updateHeader();
+}
 
 
-/* ---------- 6. BACK TO TOP BUTTON ---------- */
+/* 05. BACK TO TOP */
 
-const backToTop = document.querySelector(".back-to-top");
-
-function handleBackToTop() {
+function initialiseBackToTop() {
+    const backToTop = document.querySelector(".back-to-top");
 
     if (!backToTop) return;
 
-    if (window.scrollY > 400) {
-
-        backToTop.classList.add("visible");
-
-    } else {
-
-        backToTop.classList.remove("visible");
-
+    function updateButton() {
+        backToTop.classList.toggle("visible", window.scrollY > 450);
     }
 
-}
-
-window.addEventListener("scroll", handleBackToTop);
-
-handleBackToTop();
-
-if (backToTop) {
+    window.addEventListener("scroll", updateButton, {
+        passive: true
+    });
 
     backToTop.addEventListener("click", () => {
-
         window.scrollTo({
             top: 0,
             behavior: "smooth"
         });
-
     });
 
+    updateButton();
 }
 
 
-/* ---------- 7. AUTOMATIC FOOTER YEAR ---------- */
+/* 06. FOOTER YEAR */
 
-const currentYear = document.querySelector("#current-year");
+function initialiseFooter() {
+    const yearElement = document.getElementById("current-year");
 
-if (currentYear) {
-
-    currentYear.textContent = new Date().getFullYear();
-
+    if (yearElement) {
+        yearElement.textContent = new Date().getFullYear();
+    }
 }
 
 
-/* ---------- 8. PROJECT IMAGE URL ---------- */
+/* 07. HERO TEXT MOTION */
+
+function initialiseHeroMotion() {
+    const heroAccent = document.querySelector(".hero-accent");
+
+    if (!heroAccent) return;
+
+    const reducedMotion = window.matchMedia(
+        "(prefers-reduced-motion: reduce)"
+    ).matches;
+
+    if (reducedMotion) return;
+
+    const phrases = [
+        "I build for the web.",
+        "I engineer digital systems.",
+        "I turn ideas into interfaces.",
+        "I create with precision."
+    ];
+
+    let currentPhrase = 0;
+
+    window.setInterval(() => {
+        currentPhrase = (currentPhrase + 1) % phrases.length;
+
+        heroAccent.style.transition =
+            "opacity 0.3s ease, transform 0.3s ease";
+
+        heroAccent.style.opacity = "0";
+        heroAccent.style.transform = "translateY(7px)";
+
+        window.setTimeout(() => {
+            heroAccent.textContent = phrases[currentPhrase];
+
+            heroAccent.style.opacity = "1";
+            heroAccent.style.transform = "translateY(0)";
+        }, 300);
+
+    }, 3500);
+}
+
+
+/* 08. PROJECT IMAGE URL */
 
 function getProjectImageURL(imageKey) {
-
     if (!imageKey) return "";
 
     const encodedKey = String(imageKey)
@@ -295,71 +271,50 @@ function getProjectImageURL(imageKey) {
         .join("/");
 
     return `${API_BASE_URL}/api/images/${encodedKey}`;
-
 }
 
 
-/* ---------- 9. PROJECT CARD ---------- */
+/* 09. PROJECT CARD */
 
 function createProjectCard(project) {
+    const title = escapeHTML(project.title || "Untitled project");
+    const description = escapeHTML(
+        project.description || "Project details coming soon."
+    );
 
-    const title = escapeHTML(project.title);
-
-    const description = escapeHTML(project.description);
-
-    const category = String(project.category ?? "")
+    const category = String(project.category || "")
         .split(/[,|]/)
         .map(item => item.trim())
         .filter(Boolean);
 
-    const tagsHTML = category.length
-        ? `
-            <div class="project-tags">
-                ${category.map(tag => `<span>${escapeHTML(tag)}</span>`).join("")}
-            </div>
-        `
-        : "";
-
     const liveURL = safeURL(project.live_url);
-
     const githubURL = safeURL(project.github_url);
-
-    const linksHTML = `
-        ${liveURL
-            ? `<a href="${escapeHTML(liveURL)}" target="_blank" rel="noopener noreferrer">View Live Project ↗</a>`
-            : ""
-        }
-
-        ${githubURL
-            ? `<a href="${escapeHTML(githubURL)}" target="_blank" rel="noopener noreferrer">GitHub ↗</a>`
-            : ""
-        }
-    `;
-
     const imageURL = getProjectImageURL(project.image_key);
 
+    const tagsHTML = category
+        .map(tag => `<span>${escapeHTML(tag)}</span>`)
+        .join("");
+
+    const linksHTML = [
+        liveURL
+            ? `<a href="${escapeHTML(liveURL)}" target="_blank" rel="noopener noreferrer">View live project ↗</a>`
+            : "",
+
+        githubURL
+            ? `<a href="${escapeHTML(githubURL)}" target="_blank" rel="noopener noreferrer">GitHub ↗</a>`
+            : ""
+    ].filter(Boolean).join("");
+
     const imageHTML = imageURL
-        ? `
-            <div class="project-image">
-                <img
-                    src="${escapeHTML(imageURL)}"
-                    alt="${title} project preview"
-                    loading="lazy"
-                >
-            </div>
-        `
-        : `
-            <div class="project-image">
-                <div class="project-image-placeholder">
-                    Project Preview
-                </div>
-            </div>
-        `;
+        ? `<img src="${escapeHTML(imageURL)}" alt="${title} project preview" loading="lazy">`
+        : `<div class="project-image-placeholder">PROJECT PREVIEW</div>`;
 
     return `
         <article class="project-card">
 
-            ${imageHTML}
+            <div class="project-image">
+                ${imageHTML}
+            </div>
 
             <div class="project-info">
 
@@ -367,7 +322,10 @@ function createProjectCard(project) {
 
                 <p>${description}</p>
 
-                ${tagsHTML}
+                ${tagsHTML
+                    ? `<div class="project-tags">${tagsHTML}</div>`
+                    : ""
+                }
 
                 ${linksHTML
                     ? `<div class="project-links">${linksHTML}</div>`
@@ -378,190 +336,198 @@ function createProjectCard(project) {
 
         </article>
     `;
-
 }
 
 
-/* ---------- 10. LOAD PUBLIC PROJECTS ---------- */
+/* 10. LOAD PROJECTS */
 
 async function loadProjects() {
+    const container = document.getElementById("projects-container");
 
-    const projectsContainer =
-        document.querySelector("#projects-container");
+    if (!container) return;
 
-    if (!projectsContainer) return;
-
-    projectsContainer.innerHTML = `
-        <p class="empty-projects">
-            Loading projects...
+    container.innerHTML = `
+        <p class="projects-loading">
+            <span class="loading-marker"></span>
+            Loading selected work...
         </p>
     `;
 
     try {
-
         const projects = await fetchPublicData(
             "/api/projects",
             "projects"
         );
 
-        if (projects.length === 0) {
-
-            projectsContainer.innerHTML = `
-                <p class="empty-projects">
-                    Our featured projects will appear here soon.
+        if (!projects.length) {
+            container.innerHTML = `
+                <p class="projects-loading">
+                    New projects are being prepared.
                 </p>
             `;
 
             return;
-
         }
 
-        projectsContainer.innerHTML = projects
+        container.innerHTML = projects
             .map(createProjectCard)
             .join("");
 
+        container.querySelectorAll(".project-image img").forEach(image => {
+            image.addEventListener("error", () => {
+                const wrapper = image.closest(".project-image");
 
-        // Show a fallback if an uploaded image cannot load.
-
-        projectsContainer.querySelectorAll(".project-image img")
-            .forEach(image => {
-
-                image.addEventListener("error", () => {
-
-                    const placeholder =
-                        document.createElement("div");
-
-                    placeholder.className =
-                        "project-image-placeholder";
-
-                    placeholder.textContent = "Project Preview";
-
-                    image.replaceWith(placeholder);
-
-                });
-
-            });
-
+                if (wrapper) {
+                    wrapper.innerHTML = `
+                        <div class="project-image-placeholder">
+                            PREVIEW UNAVAILABLE
+                        </div>
+                    `;
+                }
+            }, { once: true });
+        });
 
     } catch (error) {
+        console.error("Project loading error:", error);
 
-        console.error("Projects loading error:", error);
-
-        projectsContainer.innerHTML = `
-            <p class="empty-projects">
+        container.innerHTML = `
+            <p class="projects-loading">
                 Projects are temporarily unavailable.
-                Please check back soon.
+                Please check back shortly.
             </p>
         `;
-
     }
-
 }
 
 
-/* ---------- 11. TESTIMONIAL CARD ---------- */
+/* 11. TESTIMONIAL CARD */
 
 function createTestimonialCard(testimonial) {
+    const content = escapeHTML(
+        testimonial.content || testimonial.message || ""
+    );
 
-    const content = escapeHTML(testimonial.content);
+    const clientName = escapeHTML(
+        testimonial.client_name || "Client"
+    );
 
-    const clientName = escapeHTML(testimonial.client_name);
+    const clientRole = escapeHTML(
+        testimonial.client_role || ""
+    );
 
-    const clientRole = escapeHTML(testimonial.client_role);
-
-    const company = escapeHTML(testimonial.company);
+    const company = escapeHTML(
+        testimonial.company || ""
+    );
 
     const details = [clientRole, company]
         .filter(Boolean)
-        .join(" · ");
+        .join(" / ");
 
     return `
         <article class="testimonial-card">
 
-            <p>"${content}"</p>
+            <p>${content}</p>
 
             <div class="testimonial-author">
-
                 <strong>${clientName}</strong>
-
-                ${details
-                    ? `<span> — ${details}</span>`
-                    : ""
-                }
-
+                ${details ? `<span> — ${details}</span>` : ""}
             </div>
 
         </article>
     `;
-
 }
 
 
-/* ---------- 12. LOAD PUBLIC TESTIMONIALS ---------- */
+/* 12. LOAD TESTIMONIALS */
 
 async function loadTestimonials() {
+    const container = document.getElementById("testimonials-container");
 
-    const testimonialsContainer =
-        document.querySelector("#testimonials-container");
+    if (!container) return;
 
-    if (!testimonialsContainer) return;
-
-    testimonialsContainer.innerHTML = `
-        <p class="empty-testimonials">
-            Loading testimonials...
+    container.innerHTML = `
+        <p class="testimonials-loading">
+            Loading client feedback...
         </p>
     `;
 
     try {
-
         const testimonials = await fetchPublicData(
             "/api/testimonials",
             "testimonials"
         );
 
-        if (testimonials.length === 0) {
-
-            testimonialsContainer.innerHTML = `
-                <p class="empty-testimonials">
-                    Client testimonials will appear here soon.
+        if (!testimonials.length) {
+            container.innerHTML = `
+                <p class="testimonials-loading">
+                    Client feedback will appear here soon.
                 </p>
             `;
 
             return;
-
         }
 
-        testimonialsContainer.innerHTML = testimonials
+        container.innerHTML = testimonials
             .map(createTestimonialCard)
             .join("");
 
     } catch (error) {
+        console.error("Testimonial loading error:", error);
 
-        console.error("Testimonials loading error:", error);
-
-        testimonialsContainer.innerHTML = `
-            <p class="empty-testimonials">
-                Testimonials are temporarily unavailable.
-                Please check back soon.
+        container.innerHTML = `
+            <p class="testimonials-loading">
+                Client feedback is temporarily unavailable.
             </p>
         `;
-
     }
-
 }
 
 
-/* ---------- 13. START PUBLIC CONTENT ---------- */
+/* 13. ACTIVE NAVIGATION */
+
+function initialiseActiveNavigation() {
+    const sections = document.querySelectorAll(
+        "main section[id]"
+    );
+
+    const navLinks = document.querySelectorAll(
+        ".main-nav a[href^='#']"
+    );
+
+    if (!sections.length || !navLinks.length) return;
+
+    if (!("IntersectionObserver" in window)) return;
+
+    const observer = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+            if (!entry.isIntersecting) return;
+
+            navLinks.forEach(link => {
+                const isActive =
+                    link.getAttribute("href") === `#${entry.target.id}`;
+
+                link.classList.toggle("active", isActive);
+            });
+        });
+    }, {
+        rootMargin: "-30% 0px -60% 0px"
+    });
+
+    sections.forEach(section => observer.observe(section));
+}
+
+
+/* 14. INITIALISE WEBSITE */
 
 document.addEventListener("DOMContentLoaded", () => {
+    initialiseNavigation();
+    initialiseTheme();
+    initialiseHeader();
+    initialiseBackToTop();
+    initialiseFooter();
+    initialiseHeroMotion();
+    initialiseActiveNavigation();
 
     loadProjects();
-
     loadTestimonials();
-
 });
-
-
-/* =========================================
-   END OF TET3RHQ STUDIO WEBSITE SCRIPT
-========================================= */
