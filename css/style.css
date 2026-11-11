@@ -16,8 +16,8 @@
     --bg-raised: #22272b;
 
     --text: #f1f1ed;
-    --text-muted: #b2b8b6;
-    --text-soft: #929a98;
+--text-muted: #c0c5c2;
+--text-soft: #a0a8a5;
 
     --line: rgba(230, 235, 235, 0.13);
     --line-strong: rgba(230, 235, 235, 0.24);
@@ -1431,7 +1431,7 @@ body.light-mode .contact-button:hover {
     }
 
     .service-card p {
-        font-size: 10px;
+        font-size: 11px;
     }
 
     .service-category {
@@ -1460,7 +1460,7 @@ body.light-mode .contact-button:hover {
     }
 
     .project-info p {
-        font-size: 11px;
+        font-size: 12px;
     }
 
     .projects-footer {
@@ -1483,7 +1483,7 @@ body.light-mode .contact-button:hover {
     }
 
     .process-step p {
-        font-size: 11px;
+        font-size: 12px;
     }
 
     .testimonials-grid {
@@ -1495,7 +1495,7 @@ body.light-mode .contact-button:hover {
     }
 
     .testimonial-card p {
-        font-size: 12px;
+        font-size: 13px;
     }
 
     .contact-panel {
