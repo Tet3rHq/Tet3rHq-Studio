@@ -1,25 +1,21 @@
 
-/* =====================================================
-   TET3RHQ STUDIO — FRONTEND INTERACTIONS
-   Public API / Navigation / Theme / Motion
-===================================================== */
+/* =========================================================
+   TET3RHQ STUDIO
+   PUBLIC WEBSITE INTERACTIONS
+========================================================= */
 
 const API_BASE_URL = "";
 
-/* 01. HELPERS */
+/* 01. GENERAL HELPERS */
 
 function escapeHTML(value) {
-    return String(value ?? "").replace(/[&<>"']/g, character => {
-        const entities = {
-            "&": "&amp;",
-            "<": "&lt;",
-            ">": "&gt;",
-            '"': "&quot;",
-            "'": "&#39;"
-        };
-
-        return entities[character];
-    });
+    return String(value ?? "").replace(/[&<>"']/g, character => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;"
+    })[character]);
 }
 
 function safeURL(value) {
@@ -28,11 +24,11 @@ function safeURL(value) {
     try {
         const url = new URL(String(value), window.location.origin);
 
-        if (url.protocol === "http:" || url.protocol === "https:") {
-            return url.href;
+        if (!["http:", "https:"].includes(url.protocol)) {
+            return "";
         }
 
-        return "";
+        return url.href;
     } catch {
         return "";
     }
@@ -41,15 +37,27 @@ function safeURL(value) {
 function extractCollection(payload, collectionName) {
     if (Array.isArray(payload)) return payload;
 
-    if (!payload || typeof payload !== "object") return [];
+    if (!payload || typeof payload !== "object") {
+        return [];
+    }
 
     if (Array.isArray(payload[collectionName])) {
         return payload[collectionName];
     }
 
-    if (Array.isArray(payload.data)) return payload.data;
-    if (Array.isArray(payload.results)) return payload.results;
-    if (Array.isArray(payload.items)) return payload.items;
+    for (const key of ["data", "results", "items"]) {
+        if (Array.isArray(payload[key])) {
+            return payload[key];
+        }
+
+        if (
+            payload[key] &&
+            typeof payload[key] === "object" &&
+            Array.isArray(payload[key][collectionName])
+        ) {
+            return payload[key][collectionName];
+        }
+    }
 
     return [];
 }
@@ -60,7 +68,7 @@ async function fetchPublicData(endpoint, collectionName) {
         credentials: "include",
         cache: "no-store",
         headers: {
-            "Accept": "application/json"
+            Accept: "application/json"
         }
     });
 
@@ -71,7 +79,7 @@ async function fetchPublicData(endpoint, collectionName) {
     const payload = await response.json();
 
     if (payload && payload.success === false) {
-        throw new Error(payload.message || "Unable to load data.");
+        throw new Error(payload.error || "Unable to load content.");
     }
 
     return extractCollection(payload, collectionName);
@@ -83,59 +91,67 @@ async function fetchPublicData(endpoint, collectionName) {
 function initialiseNavigation() {
     const menuToggle = document.querySelector(".menu-toggle");
     const mainNav = document.querySelector(".main-nav");
+    const navLinks = document.querySelectorAll(".main-nav a");
 
     if (!menuToggle || !mainNav) return;
 
     function closeMenu() {
         mainNav.classList.remove("active");
+
         menuToggle.setAttribute("aria-expanded", "false");
         menuToggle.setAttribute("aria-label", "Open navigation");
         menuToggle.textContent = "☰";
     }
 
-    function toggleMenu() {
-        const isOpen = mainNav.classList.toggle("active");
+    function openMenu() {
+        mainNav.classList.add("active");
 
-        menuToggle.setAttribute("aria-expanded", String(isOpen));
-        menuToggle.setAttribute(
-            "aria-label",
-            isOpen ? "Close navigation" : "Open navigation"
-        );
-
-        menuToggle.textContent = isOpen ? "✕" : "☰";
+        menuToggle.setAttribute("aria-expanded", "true");
+        menuToggle.setAttribute("aria-label", "Close navigation");
+        menuToggle.textContent = "✕";
     }
 
-    menuToggle.addEventListener("click", toggleMenu);
+    menuToggle.addEventListener("click", () => {
+        const isOpen = mainNav.classList.contains("active");
 
-    mainNav.querySelectorAll("a").forEach(link => {
+        if (isOpen) {
+            closeMenu();
+        } else {
+            openMenu();
+        }
+    });
+
+    navLinks.forEach(link => {
         link.addEventListener("click", closeMenu);
     });
 
     document.addEventListener("keydown", event => {
-        if (event.key === "Escape") closeMenu();
+        if (event.key === "Escape") {
+            closeMenu();
+        }
     });
 
     window.addEventListener("resize", () => {
-        if (window.innerWidth > 850) closeMenu();
+        if (window.innerWidth > 850) {
+            closeMenu();
+        }
     });
 }
 
 
-/* 03. THEME SYSTEM */
+/* 03. THEME SWITCHER */
 
 function initialiseTheme() {
     const themeToggle = document.querySelector(".theme-toggle");
 
     if (!themeToggle) return;
 
-    const savedTheme = localStorage.getItem("tet3rhq-theme");
+    const storageKey = "tet3rhq-theme";
 
-    if (savedTheme === "light") {
-        document.body.classList.add("light-mode");
-    }
+    function applyTheme(theme) {
+        const isLight = theme === "light";
 
-    function updateThemeButton() {
-        const isLight = document.body.classList.contains("light-mode");
+        document.body.classList.toggle("light-mode", isLight);
 
         themeToggle.textContent = isLight ? "☀" : "◐";
 
@@ -145,19 +161,28 @@ function initialiseTheme() {
         );
     }
 
-    updateThemeButton();
+    let savedTheme = "dark";
+
+    try {
+        savedTheme = localStorage.getItem(storageKey) || "dark";
+    } catch {
+        savedTheme = "dark";
+    }
+
+    applyTheme(savedTheme);
 
     themeToggle.addEventListener("click", () => {
-        document.body.classList.toggle("light-mode");
+        const nextTheme = document.body.classList.contains("light-mode")
+            ? "dark"
+            : "light";
 
-        const isLight = document.body.classList.contains("light-mode");
+        applyTheme(nextTheme);
 
-        localStorage.setItem(
-            "tet3rhq-theme",
-            isLight ? "light" : "dark"
-        );
-
-        updateThemeButton();
+        try {
+            localStorage.setItem(storageKey, nextTheme);
+        } catch {
+            // Theme still works if browser storage is unavailable.
+        }
     });
 }
 
@@ -173,11 +198,11 @@ function initialiseHeader() {
         header.classList.toggle("scrolled", window.scrollY > 40);
     }
 
+    updateHeader();
+
     window.addEventListener("scroll", updateHeader, {
         passive: true
     });
-
-    updateHeader();
 }
 
 
@@ -188,29 +213,22 @@ function initialiseBackToTop() {
 
     if (!backToTop) return;
 
-    function updateButton() {
+    function updateVisibility() {
         backToTop.classList.toggle("visible", window.scrollY > 450);
     }
 
-    window.addEventListener("scroll", updateButton, {
+    updateVisibility();
+
+    window.addEventListener("scroll", updateVisibility, {
         passive: true
     });
-
-    backToTop.addEventListener("click", () => {
-        window.scrollTo({
-            top: 0,
-            behavior: "smooth"
-        });
-    });
-
-    updateButton();
 }
 
 
 /* 06. FOOTER YEAR */
 
-function initialiseFooter() {
-    const yearElement = document.getElementById("current-year");
+function initialiseFooterYear() {
+    const yearElement = document.querySelector("#current-year");
 
     if (yearElement) {
         yearElement.textContent = new Date().getFullYear();
@@ -218,43 +236,38 @@ function initialiseFooter() {
 }
 
 
-/* 07. HERO TEXT MOTION */
+/* 07. HERO TEXT ANIMATION */
 
 function initialiseHeroMotion() {
     const heroAccent = document.querySelector(".hero-accent");
 
     if (!heroAccent) return;
 
-    const reducedMotion = window.matchMedia(
-        "(prefers-reduced-motion: reduce)"
-    ).matches;
-
-    if (reducedMotion) return;
-
     const phrases = [
-        "I build for the web.",
         "I engineer digital systems.",
         "I turn ideas into interfaces.",
+        "I build for the web.",
         "I create with precision."
     ];
+
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        return;
+    }
 
     let currentPhrase = 0;
 
     window.setInterval(() => {
-        currentPhrase = (currentPhrase + 1) % phrases.length;
-
-        heroAccent.style.transition =
-            "opacity 0.3s ease, transform 0.3s ease";
-
         heroAccent.style.opacity = "0";
-        heroAccent.style.transform = "translateY(7px)";
+        heroAccent.style.transform = "translateY(8px)";
 
         window.setTimeout(() => {
+            currentPhrase = (currentPhrase + 1) % phrases.length;
+
             heroAccent.textContent = phrases[currentPhrase];
 
             heroAccent.style.opacity = "1";
             heroAccent.style.transform = "translateY(0)";
-        }, 300);
+        }, 250);
 
     }, 3500);
 }
@@ -279,35 +292,47 @@ function getProjectImageURL(imageKey) {
 function createProjectCard(project) {
     const title = escapeHTML(project.title || "Untitled project");
     const description = escapeHTML(
-        project.description || "Project details coming soon."
+        project.description || "A digital project developed by Tet3rHq Studio."
     );
 
-    const category = String(project.category || "")
+    const categories = String(project.category || "")
         .split(/[,|]/)
-        .map(item => item.trim())
+        .map(category => category.trim())
         .filter(Boolean);
 
     const liveURL = safeURL(project.live_url);
     const githubURL = safeURL(project.github_url);
     const imageURL = getProjectImageURL(project.image_key);
 
-    const tagsHTML = category
-        .map(tag => `<span>${escapeHTML(tag)}</span>`)
-        .join("");
+    const tagsHTML = categories.length
+        ? categories.map(category => `
+            <span>${escapeHTML(category)}</span>
+        `).join("")
+        : "";
 
     const linksHTML = [
         liveURL
             ? `<a href="${escapeHTML(liveURL)}" target="_blank" rel="noopener noreferrer">View live project ↗</a>`
             : "",
-
         githubURL
             ? `<a href="${escapeHTML(githubURL)}" target="_blank" rel="noopener noreferrer">GitHub ↗</a>`
             : ""
     ].filter(Boolean).join("");
 
     const imageHTML = imageURL
-        ? `<img src="${escapeHTML(imageURL)}" alt="${title} project preview" loading="lazy">`
-        : `<div class="project-image-placeholder">PROJECT PREVIEW</div>`;
+        ? `
+            <img
+                src="${escapeHTML(imageURL)}"
+                alt="${title} project preview"
+                loading="lazy"
+                decoding="async"
+            >
+        `
+        : `
+            <div class="project-image-placeholder">
+                PROJECT PREVIEW
+            </div>
+        `;
 
     return `
         <article class="project-card">
@@ -322,15 +347,17 @@ function createProjectCard(project) {
 
                 <p>${description}</p>
 
-                ${tagsHTML
-                    ? `<div class="project-tags">${tagsHTML}</div>`
-                    : ""
-                }
+                ${tagsHTML ? `
+                    <div class="project-tags">
+                        ${tagsHTML}
+                    </div>
+                ` : ""}
 
-                ${linksHTML
-                    ? `<div class="project-links">${linksHTML}</div>`
-                    : ""
-                }
+                ${linksHTML ? `
+                    <div class="project-links">
+                        ${linksHTML}
+                    </div>
+                ` : ""}
 
             </div>
 
@@ -342,15 +369,12 @@ function createProjectCard(project) {
 /* 10. LOAD PROJECTS */
 
 async function loadProjects() {
-    const container = document.getElementById("projects-container");
+    const container = document.querySelector("#projects-container");
 
     if (!container) return;
 
     container.innerHTML = `
-        <p class="projects-loading">
-            <span class="loading-marker"></span>
-            Loading selected work...
-        </p>
+        <p class="loading-message">Loading selected projects...</p>
     `;
 
     try {
@@ -361,11 +385,10 @@ async function loadProjects() {
 
         if (!projects.length) {
             container.innerHTML = `
-                <p class="projects-loading">
-                    New projects are being prepared.
+                <p class="empty-message">
+                    New projects are currently being prepared.
                 </p>
             `;
-
             return;
         }
 
@@ -375,15 +398,12 @@ async function loadProjects() {
 
         container.querySelectorAll(".project-image img").forEach(image => {
             image.addEventListener("error", () => {
-                const wrapper = image.closest(".project-image");
+                const placeholder = document.createElement("div");
 
-                if (wrapper) {
-                    wrapper.innerHTML = `
-                        <div class="project-image-placeholder">
-                            PREVIEW UNAVAILABLE
-                        </div>
-                    `;
-                }
+                placeholder.className = "project-image-placeholder";
+                placeholder.textContent = "PREVIEW UNAVAILABLE";
+
+                image.replaceWith(placeholder);
             }, { once: true });
         });
 
@@ -391,7 +411,7 @@ async function loadProjects() {
         console.error("Project loading error:", error);
 
         container.innerHTML = `
-            <p class="projects-loading">
+            <p class="empty-message">
                 Projects are temporarily unavailable.
                 Please check back shortly.
             </p>
@@ -403,35 +423,26 @@ async function loadProjects() {
 /* 11. TESTIMONIAL CARD */
 
 function createTestimonialCard(testimonial) {
-    const content = escapeHTML(
-        testimonial.content || testimonial.message || ""
-    );
-
+    const content = escapeHTML(testimonial.content || "");
     const clientName = escapeHTML(
         testimonial.client_name || "Client"
     );
 
-    const clientRole = escapeHTML(
-        testimonial.client_role || ""
-    );
+    const role = escapeHTML(testimonial.client_role || "");
+    const company = escapeHTML(testimonial.company || "");
 
-    const company = escapeHTML(
-        testimonial.company || ""
-    );
-
-    const details = [clientRole, company]
+    const details = [role, company]
         .filter(Boolean)
         .join(" / ");
 
     return `
         <article class="testimonial-card">
 
-            <p>${content}</p>
+            <p>“${content}”</p>
 
-            <div class="testimonial-author">
-                <strong>${clientName}</strong>
-                ${details ? `<span> — ${details}</span>` : ""}
-            </div>
+            <h3>${clientName}</h3>
+
+            ${details ? `<span>${details}</span>` : ""}
 
         </article>
     `;
@@ -441,14 +452,14 @@ function createTestimonialCard(testimonial) {
 /* 12. LOAD TESTIMONIALS */
 
 async function loadTestimonials() {
-    const container = document.getElementById("testimonials-container");
+    const container = document.querySelector(
+        "#testimonials-container"
+    );
 
     if (!container) return;
 
     container.innerHTML = `
-        <p class="testimonials-loading">
-            Loading client feedback...
-        </p>
+        <p class="loading-message">Loading testimonials...</p>
     `;
 
     try {
@@ -459,11 +470,10 @@ async function loadTestimonials() {
 
         if (!testimonials.length) {
             container.innerHTML = `
-                <p class="testimonials-loading">
-                    Client feedback will appear here soon.
+                <p class="empty-message">
+                    Client experiences will appear here soon.
                 </p>
             `;
-
             return;
         }
 
@@ -475,8 +485,8 @@ async function loadTestimonials() {
         console.error("Testimonial loading error:", error);
 
         container.innerHTML = `
-            <p class="testimonials-loading">
-                Client feedback is temporarily unavailable.
+            <p class="empty-message">
+                Testimonials are temporarily unavailable.
             </p>
         `;
     }
@@ -486,31 +496,42 @@ async function loadTestimonials() {
 /* 13. ACTIVE NAVIGATION */
 
 function initialiseActiveNavigation() {
-    const sections = document.querySelectorAll(
-        "main section[id]"
-    );
+    const navLinks = document.querySelectorAll(".main-nav a");
 
-    const navLinks = document.querySelectorAll(
-        ".main-nav a[href^='#']"
-    );
+    if (!navLinks.length || !("IntersectionObserver" in window)) {
+        return;
+    }
 
-    if (!sections.length || !navLinks.length) return;
+    const sections = Array.from(navLinks)
+        .map(link => document.querySelector(link.getAttribute("href")))
+        .filter(Boolean);
 
-    if (!("IntersectionObserver" in window)) return;
+    if (!sections.length) return;
 
     const observer = new IntersectionObserver(entries => {
-        entries.forEach(entry => {
-            if (!entry.isIntersecting) return;
+        const visibleSections = entries
+            .filter(entry => entry.isIntersecting)
+            .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
 
-            navLinks.forEach(link => {
-                const isActive =
-                    link.getAttribute("href") === `#${entry.target.id}`;
+        if (!visibleSections.length) return;
 
-                link.classList.toggle("active", isActive);
-            });
+        const activeID = visibleSections[0].target.id;
+
+        navLinks.forEach(link => {
+            const isActive = link.getAttribute("href") === `#${activeID}`;
+
+            link.classList.toggle("active", isActive);
+
+            if (isActive) {
+                link.setAttribute("aria-current", "location");
+            } else {
+                link.removeAttribute("aria-current");
+            }
         });
+
     }, {
-        rootMargin: "-30% 0px -60% 0px"
+        rootMargin: "-20% 0px -60% 0px",
+        threshold: [0, 0.15, 0.35, 0.6]
     });
 
     sections.forEach(section => observer.observe(section));
@@ -524,7 +545,7 @@ document.addEventListener("DOMContentLoaded", () => {
     initialiseTheme();
     initialiseHeader();
     initialiseBackToTop();
-    initialiseFooter();
+    initialiseFooterYear();
     initialiseHeroMotion();
     initialiseActiveNavigation();
 
