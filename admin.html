@@ -1,0 +1,736 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Tet3rHq Studio | Admin</title>
+
+<style>
+:root {
+    --bg: #0b0d10;
+    --panel: #14171c;
+    --panel2: #1b2027;
+    --line: #2b323b;
+    --text: #f3f5f7;
+    --muted: #929ba7;
+    --blue: #83aaff;
+    --danger: #ff7777;
+    --radius: 15px;
+}
+* { box-sizing: border-box; }
+body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: Arial, sans-serif;
+    min-height: 100vh;
+}
+button, input, textarea, select { font: inherit; }
+button { cursor: pointer; }
+.hidden { display: none !important; }
+
+.login-screen {
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+}
+.login-card {
+    width: 100%;
+    max-width: 410px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    padding: 34px;
+}
+.brand {
+    font-size: 13px;
+    letter-spacing: 4px;
+    color: var(--blue);
+    font-weight: bold;
+}
+.login-card h1 { font-size: 30px; margin: 25px 0 8px; }
+.muted { color: var(--muted); line-height: 1.6; }
+.field { margin: 18px 0; }
+.field label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 13px;
+    color: var(--muted);
+}
+input, textarea, select {
+    width: 100%;
+    padding: 13px 14px;
+    color: var(--text);
+    background: #0d1014;
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    outline: none;
+}
+input:focus, textarea:focus, select:focus {
+    border-color: var(--blue);
+}
+textarea { min-height: 110px; resize: vertical; }
+.primary, .secondary, .danger {
+    border: 0;
+    border-radius: 9px;
+    padding: 12px 17px;
+    font-weight: bold;
+}
+.primary { background: var(--blue); color: #101722; }
+.secondary { background: var(--panel2); color: var(--text); border: 1px solid var(--line); }
+.danger { background: #492326; color: #ffaaaa; }
+button:disabled { opacity: .5; cursor: not-allowed; }
+.full { width: 100%; }
+.message { margin-top: 14px; font-size: 13px; color: var(--danger); }
+
+.app { display: flex; min-height: 100vh; }
+.sidebar {
+    width: 245px;
+    flex-shrink: 0;
+    padding: 28px 18px;
+    border-right: 1px solid var(--line);
+    background: #101318;
+}
+.sidebar .brand { padding: 0 12px 32px; display: block; }
+.nav-label {
+    color: #65707d;
+    font-size: 10px;
+    letter-spacing: 2px;
+    padding: 15px 12px 8px;
+}
+.nav-btn {
+    width: 100%;
+    padding: 13px 12px;
+    text-align: left;
+    border: 0;
+    border-radius: 9px;
+    background: transparent;
+    color: var(--muted);
+    margin: 3px 0;
+}
+.nav-btn.active, .nav-btn:hover {
+    background: #202a39;
+    color: white;
+}
+.sidebar-bottom { margin-top: 35px; }
+.main { flex: 1; min-width: 0; padding: 35px; }
+.topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 30px;
+}
+.topbar h1 { margin: 0; font-size: 27px; }
+.status {
+    color: #9edbb4;
+    font-size: 12px;
+    background: #183126;
+    padding: 8px 12px;
+    border-radius: 30px;
+}
+.stats {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+    margin-bottom: 28px;
+}
+.stat, .panel {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 22px;
+}
+.stat small { color: var(--muted); }
+.stat strong { display: block; font-size: 32px; margin-top: 12px; }
+.section-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+.section-head h2 { margin: 0; font-size: 20px; }
+.item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    padding: 17px 0;
+    border-bottom: 1px solid var(--line);
+}
+.item:last-child { border-bottom: 0; }
+.item-title { font-weight: bold; }
+.item-sub { color: var(--muted); font-size: 12px; margin-top: 6px; }
+.item-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.small-btn {
+    padding: 8px 11px;
+    font-size: 12px;
+    border-radius: 7px;
+}
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 16px;
+}
+.span-2 { grid-column: 1 / -1; }
+.check-row {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin: 12px 0;
+    color: var(--muted);
+    font-size: 13px;
+}
+.check-row input { width: auto; }
+.empty { color: var(--muted); padding: 25px 0; }
+#notice {
+    position: fixed;
+    right: 22px;
+    bottom: 22px;
+    max-width: 360px;
+    background: #202a39;
+    border: 1px solid #3b4c64;
+    padding: 14px 18px;
+    border-radius: 10px;
+    display: none;
+    z-index: 20;
+}
+@media(max-width: 760px) {
+    .app { display: block; }
+    .sidebar { width: 100%; border-right: 0; border-bottom: 1px solid var(--line); }
+    .sidebar .brand { padding-bottom: 15px; }
+    .nav-label, .sidebar-bottom { display: none; }
+    .nav-btn { width: auto; display: inline-block; }
+    .main { padding: 22px 16px; }
+    .stats { grid-template-columns: 1fr 1fr; }
+    .form-grid { grid-template-columns: 1fr; }
+    .span-2 { grid-column: auto; }
+    .item { align-items: flex-start; flex-direction: column; }
+}
+</style>
+</head>
+
+<body>
+
+<section id="loginScreen" class="login-screen">
+    <div class="login-card">
+        <div class="brand">TET3RHQ STUDIO</div>
+        <h1>Welcome back.</h1>
+        <p class="muted">Enter your administrator password to access your studio dashboard.</p>
+
+        <form id="loginForm">
+            <div class="field">
+                <label for="password">ADMIN PASSWORD</label>
+                <input id="password" type="password" required autocomplete="current-password" placeholder="Enter your password">
+            </div>
+            <button class="primary full" type="submit">Access Dashboard</button>
+        </form>
+        <div id="loginError" class="message"></div>
+    </div>
+</section>
+
+<div id="dashboard" class="app hidden">
+    <aside class="sidebar">
+        <span class="brand">TET3RHQ STUDIO</span>
+        <div class="nav-label">WORKSPACE</div>
+        <button class="nav-btn active" data-page="overview">▦ &nbsp; Overview</button>
+        <button class="nav-btn" data-page="projects">▧ &nbsp; Projects</button>
+        <button class="nav-btn" data-page="testimonials">▤ &nbsp; Testimonials</button>
+        <div class="sidebar-bottom">
+            <div class="nav-label">ACCOUNT</div>
+            <button class="nav-btn" id="logoutBtn">↪ &nbsp; Log out</button>
+        </div>
+    </aside>
+
+    <main class="main">
+        <div class="topbar">
+            <div>
+                <p class="brand">CONTROL CENTRE</p>
+                <h1 id="pageTitle">Overview</h1>
+            </div>
+            <span class="status">● Connected</span>
+        </div>
+
+        <section id="overviewPage" class="page">
+            <div class="stats">
+                <div class="stat">
+                    <small>Total projects</small>
+                    <strong id="projectCount">0</strong>
+                </div>
+                <div class="stat">
+                    <small>Total testimonials</small>
+                    <strong id="testimonialCount">0</strong>
+                </div>
+            </div>
+            <div class="panel">
+                <h2>Studio dashboard</h2>
+                <p class="muted">Manage the projects and client testimonials displayed on your public website.</p>
+                <p class="muted">Use the navigation to manage your content.</p>
+            </div>
+        </section>
+
+        <section id="projectsPage" class="page hidden">
+            <div class="section-head">
+                <h2>Your projects</h2>
+                <button class="primary" id="newProjectBtn">+ Add project</button>
+            </div>
+            <div class="panel">
+                <div id="projectsList" class="empty">Loading projects...</div>
+            </div>
+            <div id="projectEditor" class="panel hidden" style="margin-top:20px">
+                <div class="section-head">
+                    <h2 id="projectFormTitle">Add project</h2>
+                    <button class="secondary" id="cancelProjectBtn">Close</button>
+                </div>
+                <form id="projectForm">
+                    <input type="hidden" id="projectId">
+                    <div class="form-grid">
+                        <div class="field">
+                            <label>PROJECT TITLE</label>
+                            <input id="projectTitle" required maxlength="120">
+                        </div>
+                        <div class="field">
+                            <label>SLUG</label>
+                            <input id="projectSlug" required maxlength="140">
+                        </div>
+                        <div class="field">
+                            <label>CATEGORY</label>
+                            <input id="projectCategory" maxlength="80">
+                        </div>
+                        <div class="field">
+                            <label>SORT ORDER</label>
+                            <input id="projectOrder" type="number" value="0">
+                        </div>
+                        <div class="field span-2">
+                            <label>DESCRIPTION</label>
+                            <textarea id="projectDescription" required maxlength="2000"></textarea>
+                        </div>
+                        <div class="field">
+                            <label>LIVE WEBSITE URL</label>
+                            <input id="projectLive" type="url" placeholder="https://">
+                        </div>
+                        <div class="field">
+                            <label>GITHUB URL</label>
+                            <input id="projectGithub" type="url" placeholder="https://">
+                        </div>
+                        <div class="field span-2">
+                            <label>PROJECT IMAGE</label>
+                            <input id="projectImage" type="file" accept="image/jpeg,image/png,image/webp,image/gif">
+                            <p class="muted">Maximum image size: 5 MB.</p>
+                            <input id="projectImageKey" type="hidden">
+                        </div>
+                    </div>
+                    <label class="check-row"><input id="projectFeatured" type="checkbox"> Featured project</label>
+                    <label class="check-row"><input id="projectPublished" type="checkbox" checked> Published on website</label>
+                    <button class="primary" type="submit">Save project</button>
+                </form>
+            </div>
+        </section>
+
+        <section id="testimonialsPage" class="page hidden">
+            <div class="section-head">
+                <h2>Client testimonials</h2>
+                <button class="primary" id="newTestimonialBtn">+ Add testimonial</button>
+            </div>
+            <div class="panel">
+                <div id="testimonialsList" class="empty">Loading testimonials...</div>
+            </div>
+            <div id="testimonialEditor" class="panel hidden" style="margin-top:20px">
+                <div class="section-head">
+                    <h2 id="testimonialFormTitle">Add testimonial</h2>
+                    <button class="secondary" id="cancelTestimonialBtn">Close</button>
+                </div>
+                <form id="testimonialForm">
+                    <input type="hidden" id="testimonialId">
+                    <div class="form-grid">
+                        <div class="field">
+                            <label>CLIENT NAME</label>
+                            <input id="clientName" required maxlength="120">
+                        </div>
+                        <div class="field">
+                            <label>CLIENT ROLE</label>
+                            <input id="clientRole" maxlength="120">
+                        </div>
+                        <div class="field">
+                            <label>COMPANY</label>
+                            <input id="clientCompany" maxlength="120">
+                        </div>
+                        <div class="field">
+                            <label>SORT ORDER</label>
+                            <input id="testimonialOrder" type="number" value="0">
+                        </div>
+                        <div class="field span-2">
+                            <label>TESTIMONIAL</label>
+                            <textarea id="testimonialContent" required maxlength="2000"></textarea>
+                        </div>
+                        <div class="field span-2">
+                            <label>AVATAR IMAGE KEY (OPTIONAL)</label>
+                            <input id="avatarKey" maxlength="255">
+                        </div>
+                    </div>
+                    <label class="check-row"><input id="testimonialPublished" type="checkbox" checked> Published on website</label>
+                    <button class="primary" type="submit">Save testimonial</button>
+                </form>
+            </div>
+        </section>
+    </main>
+</div>
+
+<div id="notice" role="status"></div>
+
+<script>
+const API = "";
+let projects = [];
+let testimonials = [];
+
+const $ = id => document.getElementById(id);
+
+async function request(path, options = {}) {
+    const response = await fetch(API + path, {
+        credentials: "same-origin",
+        ...options,
+        headers: {
+            ...(options.body instanceof FormData ? {} : {"Content-Type": "application/json"}),
+            ...(options.headers || {})
+        }
+    });
+
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+        throw new Error(data.error || "Request failed (" + response.status + ")");
+    }
+    return data;
+}
+
+function notify(message) {
+    const box = $("notice");
+    box.textContent = message;
+    box.style.display = "block";
+    setTimeout(() => box.style.display = "none", 3500);
+}
+
+function showLogin() {
+    $("loginScreen").classList.remove("hidden");
+    $("dashboard").classList.add("hidden");
+}
+
+function showDashboard() {
+    $("loginScreen").classList.add("hidden");
+    $("dashboard").classList.remove("hidden");
+    loadAll();
+}
+
+async function checkSession() {
+    try {
+        await request("/api/admin/me");
+        showDashboard();
+    } catch {
+        showLogin();
+    }
+}
+
+$("loginForm").addEventListener("submit", async event => {
+    event.preventDefault();
+    $("loginError").textContent = "";
+    const button = event.submitter;
+    button.disabled = true;
+    button.textContent = "Checking...";
+
+    try {
+        await request("/api/admin/login", {
+            method: "POST",
+            body: JSON.stringify({password: $("password").value})
+        });
+        $("password").value = "";
+        showDashboard();
+    } catch (error) {
+        $("loginError").textContent = error.message;
+    } finally {
+        button.disabled = false;
+        button.textContent = "Access Dashboard";
+    }
+});
+
+$("logoutBtn").addEventListener("click", async () => {
+    try {
+        await request("/api/admin/logout", {method: "POST", body: JSON.stringify({})});
+    } catch (error) {
+        notify(error.message);
+    }
+    showLogin();
+});
+
+document.querySelectorAll(".nav-btn[data-page]").forEach(button => {
+    button.addEventListener("click", () => {
+        document.querySelectorAll(".nav-btn[data-page]").forEach(item => item.classList.remove("active"));
+        button.classList.add("active");
+
+        document.querySelectorAll(".page").forEach(page => page.classList.add("hidden"));
+        $(button.dataset.page + "Page").classList.remove("hidden");
+
+        $("pageTitle").textContent = button.dataset.page.charAt(0).toUpperCase() + button.dataset.page.slice(1);
+    });
+});
+
+async function loadAll() {
+    try {
+        const [projectData, testimonialData] = await Promise.all([
+            request("/api/admin/projects"),
+            request("/api/admin/testimonials")
+        ]);
+
+        projects = Array.isArray(projectData.projects) ? projectData.projects : [];
+        testimonials = Array.isArray(testimonialData.testimonials) ? testimonialData.testimonials : [];
+
+        $("projectCount").textContent = projects.length;
+        $("testimonialCount").textContent = testimonials.length;
+
+        renderProjects();
+        renderTestimonials();
+    } catch (error) {
+        notify("Could not load dashboard data: " + error.message);
+    }
+}
+
+function makeItem(title, subtitle, editAction, deleteAction) {
+    const row = document.createElement("div");
+    row.className = "item";
+
+    const info = document.createElement("div");
+    const name = document.createElement("div");
+    name.className = "item-title";
+    name.textContent = title || "Untitled";
+    const sub = document.createElement("div");
+    sub.className = "item-sub";
+    sub.textContent = subtitle || "";
+    info.append(name, sub);
+
+    const actions = document.createElement("div");
+    actions.className = "item-actions";
+
+    const edit = document.createElement("button");
+    edit.className = "secondary small-btn";
+    edit.textContent = "Edit";
+    edit.addEventListener("click", editAction);
+
+    const remove = document.createElement("button");
+    remove.className = "danger small-btn";
+    remove.textContent = "Delete";
+    remove.addEventListener("click", deleteAction);
+
+    actions.append(edit, remove);
+    row.append(info, actions);
+    return row;
+}
+
+function renderProjects() {
+    const list = $("projectsList");
+    list.replaceChildren();
+
+    if (!projects.length) {
+        list.textContent = "No projects yet. Select Add project to create your first one.";
+        list.className = "empty";
+        return;
+    }
+
+    list.className = "";
+    projects.forEach(project => {
+        list.appendChild(makeItem(
+            project.title,
+            (project.category || "Project") + " · " + (project.published ? "Published" : "Draft"),
+            () => editProject(project),
+            () => deleteProject(project.id)
+        ));
+    });
+}
+
+function renderTestimonials() {
+    const list = $("testimonialsList");
+    list.replaceChildren();
+
+    if (!testimonials.length) {
+        list.textContent = "No testimonials yet. Select Add testimonial to create one.";
+        list.className = "empty";
+        return;
+    }
+
+    list.className = "";
+    testimonials.forEach(item => {
+        list.appendChild(makeItem(
+            item.client_name,
+            (item.company || item.client_role || "Client") + " · " + (item.published ? "Published" : "Draft"),
+            () => editTestimonial(item),
+            () => deleteTestimonial(item.id)
+        ));
+    });
+}
+
+function openProjectEditor(project = null) {
+    $("projectEditor").classList.remove("hidden");
+    $("projectForm").reset();
+    $("projectId").value = project ? project.id : "";
+    $("projectFormTitle").textContent = project ? "Edit project" : "Add project";
+    $("projectTitle").value = project?.title || "";
+    $("projectSlug").value = project?.slug || "";
+    $("projectCategory").value = project?.category || "";
+    $("projectOrder").value = project?.sort_order ?? 0;
+    $("projectDescription").value = project?.description || "";
+    $("projectLive").value = project?.live_url || "";
+    $("projectGithub").value = project?.github_url || "";
+    $("projectImageKey").value = project?.image_key || "";
+    $("projectFeatured").checked = !!project?.featured;
+    $("projectPublished").checked = project ? !!project.published : true;
+    $("projectImage").value = "";
+    $("projectEditor").scrollIntoView({behavior: "smooth"});
+}
+
+function editProject(project) {
+    openProjectEditor(project);
+}
+
+$("newProjectBtn").addEventListener("click", () => openProjectEditor());
+$("cancelProjectBtn").addEventListener("click", () => $("projectEditor").classList.add("hidden"));
+
+$("projectTitle").addEventListener("input", () => {
+    if (!$("projectId").value) {
+        $("projectSlug").value = $("projectTitle").value
+            .toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+    }
+});
+
+$("projectImage").addEventListener("change", async () => {
+    const file = $("projectImage").files[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+        notify("Image must be 5 MB or smaller.");
+        $("projectImage").value = "";
+        return;
+    }
+
+    try {
+        const form = new FormData();
+        form.append("file", file);
+        const result = await request("/api/admin/upload", {
+            method: "POST",
+            body: form
+        });
+        $("projectImageKey").value = result.image_key || result.key || "";
+        if (!$("projectImageKey").value) throw new Error("Upload response did not contain an image key.");
+        notify("Image uploaded successfully.");
+    } catch (error) {
+        notify("Image upload failed: " + error.message);
+    }
+});
+
+$("projectForm").addEventListener("submit", async event => {
+    event.preventDefault();
+
+    const id = $("projectId").value;
+    const payload = {
+        title: $("projectTitle").value.trim(),
+        slug: $("projectSlug").value.trim(),
+        category: $("projectCategory").value.trim(),
+        sort_order: Number($("projectOrder").value) || 0,
+        description: $("projectDescription").value.trim(),
+        live_url: $("projectLive").value.trim(),
+        github_url: $("projectGithub").value.trim(),
+        image_key: $("projectImageKey").value.trim(),
+        featured: $("projectFeatured").checked,
+        published: $("projectPublished").checked
+    };
+
+    try {
+        await request(id ? "/api/admin/projects/" + encodeURIComponent(id) : "/api/admin/projects", {
+            method: id ? "PUT" : "POST",
+            body: JSON.stringify(payload)
+        });
+        notify("Project saved successfully.");
+        $("projectEditor").classList.add("hidden");
+        await loadAll();
+    } catch (error) {
+        notify("Could not save project: " + error.message);
+    }
+});
+
+async function deleteProject(id) {
+    if (!confirm("Delete this project? This cannot be undone.")) return;
+    try {
+        await request("/api/admin/projects/" + encodeURIComponent(id), {method: "DELETE"});
+        notify("Project deleted.");
+        await loadAll();
+    } catch (error) {
+        notify("Could not delete project: " + error.message);
+    }
+}
+
+function openTestimonialEditor(item = null) {
+    $("testimonialEditor").classList.remove("hidden");
+    $("testimonialForm").reset();
+    $("testimonialId").value = item ? item.id : "";
+    $("testimonialFormTitle").textContent = item ? "Edit testimonial" : "Add testimonial";
+    $("clientName").value = item?.client_name || "";
+    $("clientRole").value = item?.client_role || "";
+    $("clientCompany").value = item?.company || "";
+    $("testimonialOrder").value = item?.sort_order ?? 0;
+    $("testimonialContent").value = item?.content || "";
+    $("avatarKey").value = item?.avatar_key || "";
+    $("testimonialPublished").checked = item ? !!item.published : true;
+    $("testimonialEditor").scrollIntoView({behavior: "smooth"});
+}
+
+function editTestimonial(item) {
+    openTestimonialEditor(item);
+}
+
+$("newTestimonialBtn").addEventListener("click", () => openTestimonialEditor());
+$("cancelTestimonialBtn").addEventListener("click", () => $("testimonialEditor").classList.add("hidden"));
+
+$("testimonialForm").addEventListener("submit", async event => {
+    event.preventDefault();
+
+    const id = $("testimonialId").value;
+    const payload = {
+        client_name: $("clientName").value.trim(),
+        client_role: $("clientRole").value.trim(),
+        company: $("clientCompany").value.trim(),
+        sort_order: Number($("testimonialOrder").value) || 0,
+        content: $("testimonialContent").value.trim(),
+        avatar_key: $("avatarKey").value.trim(),
+        published: $("testimonialPublished").checked
+    };
+
+    try {
+        await request(id ? "/api/admin/testimonials/" + encodeURIComponent(id) : "/api/admin/testimonials", {
+            method: id ? "PUT" : "POST",
+            body: JSON.stringify(payload)
+        });
+        notify("Testimonial saved successfully.");
+        $("testimonialEditor").classList.add("hidden");
+        await loadAll();
+    } catch (error) {
+        notify("Could not save testimonial: " + error.message);
+    }
+});
+
+async function deleteTestimonial(id) {
+    if (!confirm("Delete this testimonial? This cannot be undone.")) return;
+    try {
+        await request("/api/admin/testimonials/" + encodeURIComponent(id), {method: "DELETE"});
+        notify("Testimonial deleted.");
+        await loadAll();
+    } catch (error) {
+        notify("Could not delete testimonial: " + error.message);
+    }
+}
+
+checkSession();
+</script>
+
+</body>
+</html>
