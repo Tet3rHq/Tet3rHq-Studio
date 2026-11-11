@@ -1,3 +1,4 @@
+
 /* =========================================================
    TET3RHQ STUDIO
    INDEPENDENT DIGITAL PRACTICE
@@ -15,14 +16,14 @@
     --bg-raised: #22272b;
 
     --text: #f1f1ed;
-    --text-muted: #c0c5c2;
-    --text-soft: #aeb6b2;
+    --text-muted: #cbd0cd;
+    --text-soft: #b2bbb7;
 
-    --line: rgba(230, 235, 235, 0.16);
-    --line-strong: rgba(230, 235, 235, 0.28);
+    --line: rgba(230, 235, 235, 0.17);
+    --line-strong: rgba(230, 235, 235, 0.30);
 
     --accent: #c8cecc;
-    --accent-dark: #aeb8b4;
+    --accent-dark: #b0bbb6;
 
     --font-main: "Manrope", Arial, sans-serif;
     --font-mono: "DM Mono", monospace;
@@ -118,16 +119,16 @@ section {
     border-bottom: 1px solid var(--line);
     color: var(--text-soft);
     font-family: var(--font-mono);
-    font-size: 11px;
-    letter-spacing: 0.1em;
+    font-size: 12px;
+    letter-spacing: 0.09em;
     text-transform: uppercase;
 }
 
 .section-kicker {
     color: var(--text-soft);
     font-family: var(--font-mono);
-    font-size: 11px;
-    letter-spacing: 0.12em;
+    font-size: 12px;
+    letter-spacing: 0.11em;
     text-transform: uppercase;
 }
 
@@ -692,10 +693,13 @@ section {
     max-width: 350px;
 }
 
+/* COMPACT PROJECT ARCHIVE */
+
 .projects-grid {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 16px;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+    align-items: stretch;
 }
 
 .project-card {
@@ -716,7 +720,7 @@ section {
 .project-image {
     position: relative;
     overflow: hidden;
-    aspect-ratio: 16 / 9;
+    aspect-ratio: 16 / 10;
     background: var(--bg-raised);
 }
 
@@ -742,43 +746,44 @@ section {
 }
 
 .project-info {
-    padding: 17px;
+    padding: 14px;
 }
 
 .project-info h3 {
-    font-size: 17px;
+    font-size: 16px;
     font-weight: 700;
-    letter-spacing: -0.045em;
+    letter-spacing: -0.04em;
 }
 
 .project-info p {
-    margin-top: 9px;
+    margin-top: 8px;
     color: var(--text-muted);
     font-size: 13px;
-    line-height: 1.75;
+    line-height: 1.7;
 }
 
 .project-tags {
     display: flex;
     flex-wrap: wrap;
-    gap: 6px;
-    margin-top: 13px;
+    gap: 5px;
+    margin-top: 12px;
 }
 
 .project-tags span {
-    padding: 4px 7px;
+    padding: 4px 6px;
     border: 1px solid var(--line);
     color: var(--text-soft);
     font-family: var(--font-mono);
     font-size: 10px;
+    line-height: 1.4;
 }
 
 .project-links {
     display: flex;
     flex-wrap: wrap;
-    gap: 15px;
-    margin-top: 16px;
-    padding-top: 13px;
+    gap: 12px;
+    margin-top: 14px;
+    padding-top: 12px;
     border-top: 1px solid var(--line);
 }
 
@@ -1039,14 +1044,14 @@ body.light-mode {
     --bg-raised: #d5d7d2;
 
     --text: #171a1b;
-    --text-muted: #454d4c;
-    --text-soft: #5c6663;
+    --text-muted: #414a48;
+    --text-soft: #59625f;
 
-    --line: rgba(20, 25, 25, 0.16);
-    --line-strong: rgba(20, 25, 25, 0.29);
+    --line: rgba(20, 25, 25, 0.17);
+    --line-strong: rgba(20, 25, 25, 0.30);
 
     --accent: #303838;
-    --accent-dark: #596460;
+    --accent-dark: #515e59;
 }
 
 body.light-mode .site-header {
@@ -1094,6 +1099,11 @@ body.light-mode .contact-button:hover {
 
     .hero-content h1 {
         font-size: 96px;
+    }
+
+    .projects-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 16px;
     }
 }
 
@@ -1143,7 +1153,11 @@ body.light-mode .contact-button:hover {
     }
 
     .project-info {
-        padding: 15px;
+        padding: 13px;
+    }
+
+    .project-info h3 {
+        font-size: 15px;
     }
 }
 
@@ -1238,6 +1252,7 @@ body.light-mode .contact-button:hover {
 
     .projects-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
     }
 
     .contact-panel {
@@ -1395,7 +1410,7 @@ body.light-mode .contact-button:hover {
 
     .section-label {
         gap: 10px;
-        font-size: 9px;
+        font-size: 10px;
     }
 
     .section-label span:last-child {
@@ -1476,11 +1491,15 @@ body.light-mode .contact-button:hover {
 
     .projects-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 10px;
+        gap: 9px;
+    }
+
+    .project-image {
+        aspect-ratio: 16 / 10;
     }
 
     .project-info {
-        padding: 12px;
+        padding: 11px;
     }
 
     .project-info h3 {
@@ -1489,12 +1508,12 @@ body.light-mode .contact-button:hover {
 
     .project-info p {
         font-size: 11px;
-        line-height: 1.65;
+        line-height: 1.6;
     }
 
     .project-tags {
-        gap: 5px;
-        margin-top: 10px;
+        gap: 4px;
+        margin-top: 9px;
     }
 
     .project-tags span {
@@ -1503,8 +1522,8 @@ body.light-mode .contact-button:hover {
     }
 
     .project-links {
-        gap: 10px;
-        margin-top: 12px;
+        gap: 9px;
+        margin-top: 11px;
         padding-top: 10px;
     }
 
@@ -1654,11 +1673,11 @@ body.light-mode .contact-button:hover {
     }
 
     .projects-grid {
-        gap: 8px;
+        gap: 7px;
     }
 
     .project-info {
-        padding: 10px;
+        padding: 9px;
     }
 
     .project-info h3 {
@@ -1674,7 +1693,7 @@ body.light-mode .contact-button:hover {
     }
 
     .project-links {
-        gap: 8px;
+        gap: 7px;
     }
 
     .project-links a {
