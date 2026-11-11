@@ -8,8 +8,7 @@
 
 /* ---------- 1. API CONFIGURATION ---------- */
 
-const API_BASE_URL =
-    "https://tet3rhq-studio-api.calabeugene.workers.dev";
+const API_BASE_URL = "";
 
 
 /* ---------- 2. SHARED HELPERS ---------- */
