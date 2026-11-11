@@ -1,0 +1,9 @@
+
+{
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://tet3rhq-studio-api.calabeugene.workers.dev/api/:path*"
+    }
+  ]
+}
